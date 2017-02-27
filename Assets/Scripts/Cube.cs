@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Runtime.InteropServices;
 
 public class Cube : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class Cube : MonoBehaviour
     public AudioClip clipCharge;
     public AudioClip clip1;
     public AudioClip clip2;
+    public ParticleSystem smokeEffect_L;
+    public ParticleSystem smokeEffect_R;
 
     public float maxScale_X = 1.5f;
     public float minScale_X = 0.5f;
@@ -27,10 +30,12 @@ public class Cube : MonoBehaviour
 
     public Transform lastFloor;
 
-    private float jumpPos_y = 0;
-
     public delegate void CanFollow();
     public CanFollow follow;
+
+    public float moveOffset = 0.5f;
+
+    private float jumpPos_y = 0;
 
     void Awake()
     {
@@ -46,12 +51,12 @@ public class Cube : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(GameController._instance.isShowTime)
+        if (GameController._instance.isShowTime)
             return;
-        
+
         if ((jumpPos_y - transform.position.y > 10) && rigid.velocity.y <= 0 && !GameController._instance.isGameOver)
         {
-            Debug.Log("gameover!!");
+            //Debug.Log("gameover!!");
             GameController._instance.GameOver();
         }
 
@@ -183,7 +188,7 @@ public class Cube : MonoBehaviour
 
     void OnCollisionStay(Collision col)
     {
-        if (col.gameObject.tag == "Ground" && isScale == true && transform.position.y > col.transform.position.y && rigid.velocity.y <= 0)
+        if (col.gameObject.tag == "Ground" && isScale == true && transform.position.y > col.transform.position.y + 0.4f && rigid.velocity.y <= 0)
         {
             isScale = false;
             needRestore = true;
@@ -195,8 +200,42 @@ public class Cube : MonoBehaviour
                 lastFloor = col.transform;
                 Destroy(temp.gameObject);
             }
+            if (Mathf.Abs(transform.position.x - lastFloor.position.x) < 0.82f)
+            {
+                if (Mathf.Abs(transform.position.x - lastFloor.position.x) < 0.3f)
+                {
+                    smokeEffect_L.Play();
+                    smokeEffect_R.Play();
+                }
+                else if (transform.position.x < lastFloor.position.x)
+                {
+                    smokeEffect_R.Play();
+                }
+                else
+                {
+                    smokeEffect_L.Play();
+                }
+                StartCoroutine(FloorShake());
+            }
             follow();
         }
+    }
+
+    private IEnumerator FloorShake()
+    {
+        Vector3 targetPos = lastFloor.position + Vector3.down * moveOffset;
+        while (Vector3.Distance(lastFloor.position, targetPos) > 0.1f)
+        {
+            lastFloor.position = Vector3.MoveTowards(lastFloor.position, targetPos, 0.1f);
+            yield return null;
+        }
+        targetPos += Vector3.up * moveOffset;
+        while (Vector3.Distance(lastFloor.position, targetPos) > 0.1f)
+        {
+            lastFloor.position = Vector3.MoveTowards(lastFloor.position, targetPos, 0.1f);
+            yield return null;
+        }
+        //follow();
     }
 
     //void OnGUI()

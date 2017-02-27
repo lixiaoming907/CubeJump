@@ -2,46 +2,59 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public class ScoreController : MonoBehaviour {
+public class ScoreController : MonoBehaviour
+{
 
 
-	public static ScoreController _instance;
+    public static ScoreController _instance;
 
-	public Text scoreTxt;
-	public Transform player;
+    public Text scoreTxt;
+    public Transform player;
 
-	int _totleScore = -1;
-	public int totleScore
-	{
-		get{
-			return _totleScore;
-		}
-		set{
-			_totleScore = value;
-		}
-	}
+    private int maxScore;
 
-	void Awake()
-	{
-		_instance = this;
-	}
+    int _totleScore = -1;
+    public int totleScore
+    {
+        get
+        {
+            return _totleScore;
+        }
+        set
+        {
+            if (value > maxScore)
+            {
+                maxScore = value;
+                PlayerPrefs.SetInt(StartUI.Key, value);
+            }
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		if(player.transform.position.y - 1 > _totleScore)
-		{
-			AddScore();
-		}
-	}
+            _totleScore = value;
+        }
+    }
 
-	void AddScore()
-	{
-		totleScore = (int)player.transform.position.y - 1;
-		scoreTxt.text = _totleScore.ToString ();
-	}
+    void Awake()
+    {
+        _instance = this;
+    }
+
+    // Use this for initialization
+    void Start()
+    {
+        maxScore = PlayerPrefs.GetInt(StartUI.Key);
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (player.transform.position.y - 1 > _totleScore)
+        {
+            AddScore();
+        }
+    }
+
+    void AddScore()
+    {
+        totleScore = (int)player.transform.position.y - 1;
+        scoreTxt.text = _totleScore.ToString();
+    }
 }
